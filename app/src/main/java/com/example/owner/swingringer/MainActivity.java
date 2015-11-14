@@ -15,6 +15,8 @@ import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
+    SensorManager mSensorManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,6 +32,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         .setAction("Action", null).show();
             }
         });
+
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
     }
 
     @Override
@@ -40,17 +44,31 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
-    protected void onStart(){
-        super.onStart();
-        SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        Sensor acc = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        Sensor gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        Sensor mag = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        Sensor prs = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
-        sensorManager.registerListener(this, acc, SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(this, mag, SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(this, prs, SensorManager.SENSOR_DELAY_FASTEST);
+    protected void onResume() {
+        super.onResume();
+        Sensor acc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (acc != null) {
+            mSensorManager.registerListener(this, acc, SensorManager.SENSOR_DELAY_FASTEST);
+        }
+        Sensor gyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        if (acc != null) {
+            mSensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_FASTEST);
+        }
+        Sensor mag = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        if (acc != null) {
+            mSensorManager.registerListener(this, mag, SensorManager.SENSOR_DELAY_FASTEST);
+        }
+//        Sensor prs = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+//        if (acc != null) {
+//            mSensorManager.registerListener(this, prs, SensorManager.SENSOR_DELAY_FASTEST);
+//        }
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mSensorManager.unregisterListener(this);
     }
 
     @Override
