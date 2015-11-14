@@ -4,6 +4,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -24,6 +26,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView mMagTextView;
     TextView mCountTextView;
     int mSwingCount = 0;
+    private SoundPool mSoundPool;
+    private int mSoundSwing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,12 +84,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //        if (acc != null) {
 //            mSensorManager.registerListener(this, prs, SensorManager.SENSOR_DELAY_FASTEST);
 //        }
+
+        mSoundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
+        mSoundSwing = mSoundPool.load(getApplicationContext(), R.raw.swish, 0);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(this);
+        mSoundPool.release();
     }
 
     @Override
@@ -122,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (mSwingDetector.isSwing()) {
             mSwingCount++;
             mCountTextView.setText(String.valueOf(mSwingCount));
+            mSoundPool.play(mSoundSwing, 1.0F, 1.0F, 0, 0, 1.0F);
         }
     }
 
