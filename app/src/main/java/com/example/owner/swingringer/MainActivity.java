@@ -26,8 +26,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView mMagTextView;
     TextView mCountTextView;
     int mSwingCount = 0;
-    private SoundPool mSoundPool;
-    private int mSoundSwing;
+    SoundRinger mSoundRinger;
+    int[] mSoundIDList = {R.raw.swish, R.raw.coin, R.raw.magic};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +40,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+                // 効果音に応じてアイコンを変更
+                switch (mSoundRinger.switchSound()) {
+                    case 0:
+                        fab.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+                        Toast.makeText(view.getContext(), "no sound", Toast.LENGTH_SHORT).show();
+                        break;
+                    case 1:
+                        fab.setImageResource(android.R.drawable.ic_lock_idle_charging);
+                        mSoundRinger.ring();
+                        break;
+                    case 2:
+                        fab.setImageResource(android.R.drawable.ic_menu_compass);
+                        mSoundRinger.ring();
+                        break;
+                    case 3:
+                        fab.setImageResource(android.R.drawable.ic_popup_sync);
+                        mSoundRinger.ring();
+                        break;
+                    default:
+                        //DO NOTHING
+                        break;
+                }
+
             }
         });
 
@@ -85,15 +107,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            mSensorManager.registerListener(this, prs, SensorManager.SENSOR_DELAY_FASTEST);
 //        }
 
-        mSoundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
-        mSoundSwing = mSoundPool.load(getApplicationContext(), R.raw.swish, 0);
+        mSoundRinger = new SoundRinger(3, mSoundIDList, this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(this);
-        mSoundPool.release();
+        mSoundRinger.release();
     }
 
     @Override
@@ -130,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (mSwingDetector.isSwing()) {
             mSwingCount++;
             mCountTextView.setText(String.valueOf(mSwingCount));
-            mSoundPool.play(mSoundSwing, 1.0F, 1.0F, 0, 0, 1.0F);
+            mSoundRinger.ring();
         }
     }
 
