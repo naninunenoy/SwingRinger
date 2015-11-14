@@ -12,10 +12,18 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     SensorManager mSensorManager;
+    SwingDetector mSwingDetector = new SwingDetector();
+    TextView mAccTextView;
+    TextView mGyroTextView;
+    TextView mMagTextView;
+    TextView mCountTextView;
+    int mSwingCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +42,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mAccTextView = (TextView) findViewById(R.id.accTextView);
+        mGyroTextView = (TextView) findViewById(R.id.gyroTextView);
+        mMagTextView = (TextView) findViewById(R.id.magTextView);
+        mCountTextView = (TextView) findViewById(R.id.swingCountTextView);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        mCountTextView.setText(String.valueOf(mSwingCount));
     }
 
     @Override
@@ -51,11 +69,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             mSensorManager.registerListener(this, acc, SensorManager.SENSOR_DELAY_FASTEST);
         }
         Sensor gyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        if (acc != null) {
+        if (gyro != null) {
             mSensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_FASTEST);
         }
         Sensor mag = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        if (acc != null) {
+        if (mag != null) {
             mSensorManager.registerListener(this, mag, SensorManager.SENSOR_DELAY_FASTEST);
         }
 //        Sensor prs = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
@@ -63,7 +81,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            mSensorManager.registerListener(this, prs, SensorManager.SENSOR_DELAY_FASTEST);
 //        }
     }
-
 
     @Override
     protected void onPause() {
@@ -88,7 +105,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent event){
-        // TODO センサの値が変わった時の処理
+        // センサ値の更新
+        mSwingDetector.setSensorData(event);
+        // センサ値表示の更新
+        if (mSwingDetector.isNewAccData()) {
+            mAccTextView.setText(mSwingDetector.getAccText());
+        }
+        if (mSwingDetector.isNewGyroData()) {
+            mGyroTextView.setText(mSwingDetector.getGyroText());
+        }
+        if (mSwingDetector.isNewMagData()) {
+            mMagTextView.setText(mSwingDetector.getMagText());
+        }
+
+        // スイング判定
+        if (mSwingDetector.isSwing()) {
+            mSwingCount++;
+            mCountTextView.setText(String.valueOf(mSwingCount));
+        }
     }
 
     @Override
