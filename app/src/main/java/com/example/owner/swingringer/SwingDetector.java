@@ -4,6 +4,7 @@ import android.hardware.SensorEvent;
 import android.hardware.Sensor;
 
 import java.lang.Math;
+import java.sql.Timestamp;
 
 
 /**
@@ -32,18 +33,21 @@ public class SwingDetector {
         case Sensor.TYPE_ACCELEROMETER:
             if (nowTime - mSensorData.acc.ts.getTime() >= PERIOD) {
                 mPreviousSensorData.acc = (IMUData.LinerData) mSensorData.acc.clone();
+                mPreviousSensorData.ts = (Timestamp) mSensorData.acc.ts.clone();
                 mSensorData.setAcc(sensorEnvent.values, mPreviousSensorData.acc, OLD_DATA_WEIGHT);
             }
             break;
         case Sensor.TYPE_GYROSCOPE:
             if (nowTime - mSensorData.gyro.ts.getTime() >= PERIOD) {
                 mPreviousSensorData.gyro = (IMUData.RotateData) mSensorData.gyro.clone();
+                mPreviousSensorData.ts = (Timestamp) mSensorData.gyro.ts.clone();
                 mSensorData.setGyro(sensorEnvent.values);
             }
             break;
         case Sensor.TYPE_MAGNETIC_FIELD:
             if (nowTime - mSensorData.mag.ts.getTime() >= PERIOD) {
                 mPreviousSensorData.mag = (IMUData.LinerData) mSensorData.mag.clone();
+                mPreviousSensorData.ts = (Timestamp) mSensorData.mag.ts.clone();
                 mSensorData.setMag(sensorEnvent.values, mPreviousSensorData.mag, OLD_DATA_WEIGHT);
             }
             break;
@@ -119,4 +123,7 @@ public class SwingDetector {
         }
         return false;
     }
+
+    protected IMUData getIMUData(){ return mSensorData; }
+    protected IMUData getOldIMUData(){ return mPreviousSensorData; }
 }

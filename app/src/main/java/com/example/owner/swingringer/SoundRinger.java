@@ -14,12 +14,12 @@ public class SoundRinger {
     private ArrayList<Integer> mSoundIDList;
     private int mSoundIndex;
 
-    SoundRinger(final int soundNum, final int[] soundList, Context context) {
+    SoundRinger(final int[] soundList, Context context) {
         mSoundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
         mSoundIDList = new ArrayList<Integer>();
         // index=0は無音とする
         mSoundIDList.add(0);
-        for (int i = 0; i < soundNum; i++) {
+        for (int i = 0; i < soundList.length; i++) {
             mSoundIDList.add(mSoundPool.load(context.getApplicationContext(), soundList[i], 0));
         }
         mSoundIndex = 1;

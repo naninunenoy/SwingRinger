@@ -1,11 +1,10 @@
 package com.example.owner.swingringer;
 
+import android.app.ProgressDialog;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.media.AudioManager;
-import android.media.SoundPool;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -16,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
+
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     int mSwingCount = 0;
     SoundRinger mSoundRinger;
     int[] mSoundIDList = {R.raw.swish, R.raw.coin, R.raw.magic};
+    static ProgressDialog mWaitDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,29 +50,49 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         break;
                     case 1:
                         fab.setImageResource(android.R.drawable.ic_lock_idle_charging);
-                        mSoundRinger.ring();
                         break;
                     case 2:
                         fab.setImageResource(android.R.drawable.ic_menu_compass);
-                        mSoundRinger.ring();
                         break;
                     case 3:
                         fab.setImageResource(android.R.drawable.ic_popup_sync);
-                        mSoundRinger.ring();
                         break;
                     default:
                         //DO NOTHING
                         break;
                 }
-
+                // 設定した音を鳴らす
+                mSoundRinger.ring();
             }
         });
 
+        // 待ち表示設定
+        mWaitDialog = new ProgressDialog(this);
+        mWaitDialog.setMessage("ネットワーク接続中...");
+        mWaitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        // センサの設定
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mAccTextView = (TextView) findViewById(R.id.accTextView);
         mGyroTextView = (TextView) findViewById(R.id.gyroTextView);
         mMagTextView = (TextView) findViewById(R.id.magTextView);
         mCountTextView = (TextView) findViewById(R.id.swingCountTextView);
+        mCountTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mWaitDialog.show();
+                int totalDataNum = CloudAccessor.getDataNum();
+                String msg;
+                if (totalDataNum == -1) {
+                    msg = "!! fail to get data from cloud DB !!";
+                } else {
+                    msg = "your total swing : " + String.valueOf(totalDataNum);
+                }
+                mWaitDialog.dismiss();
+                Snackbar.make(view, msg, Snackbar.LENGTH_SHORT).setAction("Action", null).show();
+            }
+        });
+        // Parserの作成
+        CloudAccessor.initialize(this);
     }
 
     @Override
@@ -107,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            mSensorManager.registerListener(this, prs, SensorManager.SENSOR_DELAY_FASTEST);
 //        }
 
-        mSoundRinger = new SoundRinger(3, mSoundIDList, this);
+        mSoundRinger = new SoundRinger(mSoundIDList, this);
     }
 
     @Override
@@ -149,9 +170,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // スイング判定
         if (mSwingDetector.isSwing()) {
+            mSoundRinger.ring();
+            // スイングの情報をDBに保存
+            CloudAccessor.addSwingData(mSwingDetector.getIMUData(), mSwingDetector.getOldIMUData());
             mSwingCount++;
             mCountTextView.setText(String.valueOf(mSwingCount));
-            mSoundRinger.ring();
         }
     }
 
