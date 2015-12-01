@@ -1,6 +1,5 @@
 package com.example.owner.swingringer;
 
-import android.app.ProgressDialog;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -28,7 +27,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     int mSwingCount = 0;
     SoundRinger mSoundRinger;
     int[] mSoundIDList = {R.raw.swish, R.raw.coin, R.raw.magic};
-    static ProgressDialog mWaitDialog;
+    CloudAccessor mCloudAccessor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,10 +65,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        // 待ち表示設定
-        mWaitDialog = new ProgressDialog(this);
-        mWaitDialog.setMessage("ネットワーク接続中...");
-        mWaitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         // センサの設定
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mAccTextView = (TextView) findViewById(R.id.accTextView);
@@ -79,20 +74,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mCountTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mWaitDialog.show();
-                int totalDataNum = CloudAccessor.getDataNum();
+                int totalDataNum = mCloudAccessor.getDataNum();
                 String msg;
                 if (totalDataNum == -1) {
                     msg = "!! fail to get data from cloud DB !!";
                 } else {
                     msg = "your total swing : " + String.valueOf(totalDataNum);
                 }
-                mWaitDialog.dismiss();
                 Snackbar.make(view, msg, Snackbar.LENGTH_SHORT).setAction("Action", null).show();
             }
         });
         // Parserの作成
-        CloudAccessor.initialize(this);
+        mCloudAccessor = new CloudAccessor();
+        mCloudAccessor.initialize(this, "TJONUf77Q1B8qmTATtyx9Bd0RBBnnio0GJIZdGDV", "ZdmfIdCNT0vlBN32Pq5KzHdzbTZdhywFmB4sGIFb");
     }
 
     @Override
@@ -172,7 +166,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (mSwingDetector.isSwing()) {
             mSoundRinger.ring();
             // スイングの情報をDBに保存
-            CloudAccessor.addSwingData(mSwingDetector.getIMUData(), mSwingDetector.getOldIMUData());
+            mCloudAccessor.setSwingData(mSwingDetector.getIMUData(), mSwingDetector.getOldIMUData());
+            mCloudAccessor.startAccess();
             mSwingCount++;
             mCountTextView.setText(String.valueOf(mSwingCount));
         }
